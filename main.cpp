@@ -17,13 +17,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);  // Default cursor
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);  // Background color
 
+    // Register the window class with Windows
     RegisterClassExW(&wc);
 
     // Create the window
     HWND hwnd = CreateWindowExW(
         0,                              // Extended window style
         CLASS_NAME,                     // Window class name
-        L"Triangle Window",            // Window title (ASCII only)
+        L"My Triangle",                // Window title
         WS_OVERLAPPEDWINDOW,           // Window style (standard window with title bar, etc.)
         CW_USEDEFAULT, CW_USEDEFAULT,  // Position (Windows will choose)
         800, 600,                      // Size (width, height)
@@ -33,37 +34,64 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         nullptr                        // Additional data (none)
     );
 
-    if (hwnd == nullptr)
-    {
+    // Check if window creation failed
+    if (hwnd == nullptr) {
         return 0;
     }
 
-    // Set the window title explicitly
-    SetWindowTextW(hwnd, L"Triangle Window");
-
+    // Show and update the window
     ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
 
-    // Run the message loop
+    // Message loop - handles all Windows messages
     MSG msg = {};
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        TranslateMessage(&msg);    // Translates keyboard messages
+        DispatchMessage(&msg);     // Sends message to WindowProc
     }
 
     return 0;
 }
 
-// Window callback function - handles all window messages
+// Window procedure - handles all window messages
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch (uMsg)
-    {
+    switch (uMsg) {
         case WM_DESTROY:
-            PostQuitMessage(0);
+            PostQuitMessage(0);    // Quit the application
             return 0;
 
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        case WM_PAINT:
+        {
+            // Begin painting
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            
+            // Create and select a red brush
+            HBRUSH hBrush = CreateSolidBrush(RGB(255, 0, 0));
+            SelectObject(hdc, hBrush);
+
+            // Define triangle vertices
+            POINT points[3] = {
+                {400, 100},  // Top vertex
+                {200, 500},  // Bottom left vertex
+                {600, 500}   // Bottom right vertex
+            };
+
+            // Draw the triangle
+            Polygon(hdc, points, 3);
+
+            // Clean up resources
+            DeleteObject(hBrush);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+
+        case WM_SIZE:
+            InvalidateRect(hwnd, nullptr, TRUE);  // Force window repaint when resized
+            return 0;
     }
-} 
+
+    // Handle default window messages
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
