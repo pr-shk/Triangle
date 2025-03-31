@@ -27,6 +27,7 @@
 *.lib
 
 Explicacoes.md
+*.txt
 
 # Executables
 *.exe
